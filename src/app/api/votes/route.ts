@@ -41,7 +41,9 @@ export async function POST(request: Request) {
     const round = await getVoteRound();
 
     return NextResponse.json({ ok: true, round });
-  } catch {
-    return NextResponse.json({ ok: false, error: "server" }, { status: 500 });
+  } catch (error) {
+    const hint = error instanceof Error ? error.message : "server";
+    console.error("POST /api/votes failed:", hint);
+    return NextResponse.json({ ok: false, error: "server", hint }, { status: 500 });
   }
 }
