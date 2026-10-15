@@ -53,6 +53,14 @@ export function WelcomeInvitation() {
           <div>
             <dt className="text-ink-soft">{t.venueLabel}</dt>
             <dd className="mt-1 font-medium">{lang === "mr" ? SITE.venueMr : SITE.venueEn}</dd>
+            <a
+              href={SITE.venueMapUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-block text-sm text-rosegold-deep underline decoration-rosegold/40 underline-offset-4"
+            >
+              {t.openMap}
+            </a>
           </div>
         </dl>
       </article>

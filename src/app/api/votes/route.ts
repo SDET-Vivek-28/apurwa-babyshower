@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isFirebaseConfigured, normalizeName, saveVote } from "@/lib/firebase-admin";
+import { getVoteRound, isFirebaseConfigured, normalizeName, saveVote } from "@/lib/firebase-admin";
 import type { Prediction } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -38,8 +38,9 @@ export async function POST(request: Request) {
     }
 
     await saveVote({ guestName, prediction, babyName, blessing });
+    const round = await getVoteRound();
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, round });
   } catch {
     return NextResponse.json({ ok: false, error: "server" }, { status: 500 });
   }

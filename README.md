@@ -1,6 +1,6 @@
 # अपूर्वाच्या डोहाळे जेवण | apurwa-babyshower
 
-Premium, Marathi-first digital invitation for Apoorva and Vivek.
+Premium, Marathi-first digital invitation for Apurwa and Vivek.
 
 This is a brand-new project. Guest pages never show votes, names, or percentages. Only `/admin` can read results.
 
@@ -50,7 +50,7 @@ Collections used only by this project:
 
 Edit `src/lib/site.ts` for time and venue.
 
-Replace `public/images/couple.png` with a real photo of Apoorva and Vivek. Gallery images live in `public/images/gallery-01.png` through `gallery-12.png`.
+Replace `public/images/couple.png` with a real photo of Apurwa and Vivek. Gallery images live in `public/images/gallery-01.png` through `gallery-12.png`.
 
 ## Deploy
 

@@ -26,6 +26,7 @@ export function AdminApp() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [data, setData] = useState<AdminData>(emptyData);
 
   const loadData = async () => {
@@ -68,6 +69,19 @@ export function AdminApp() {
     await fetch("/api/admin/logout", { method: "POST" });
     setAuthed(false);
     setData(emptyData);
+  };
+
+  const onClear = async () => {
+    if (!window.confirm(t.adminClearConfirm)) return;
+    setClearing(true);
+    try {
+      const response = await fetch("/api/admin/clear", { method: "POST" });
+      if (!response.ok) return;
+      await loadData();
+      window.alert(t.adminClearDone);
+    } finally {
+      setClearing(false);
+    }
   };
 
   if (authed === null) {
@@ -119,8 +133,16 @@ export function AdminApp() {
           </p>
           <h1 className="font-display text-4xl text-ink">{t.adminTitle}</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <LanguageSwitcher variant="admin" />
+          <button
+            type="button"
+            onClick={onClear}
+            disabled={clearing}
+            className="min-h-11 rounded-full border border-blush-deep/40 bg-softwhite px-5 text-blush-deep shadow-sm"
+          >
+            {clearing ? t.adminClearing : t.adminClear}
+          </button>
           <button type="button" onClick={onLogout} className="premium-button min-h-11 px-5">
             {t.adminLogout}
           </button>

@@ -7,6 +7,9 @@ service cloud.firestore {
     match /apurwa_baby_names/{doc} {
       allow read, write: if false;
     }
+    match /apurwa_dohale_meta/{doc} {
+      allow read, write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

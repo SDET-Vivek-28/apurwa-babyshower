@@ -70,6 +70,46 @@ export async function saveVote(input: {
   return voteRef.id;
 }
 
+async function deleteCollection(path: string) {
+  const db = getAdminDb();
+  const collection = db.collection(path);
+
+  while (true) {
+    const snapshot = await collection.limit(400).get();
+    if (snapshot.empty) break;
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  }
+}
+
+export async function getVoteRound() {
+  const db = getAdminDb();
+  const snapshot = await db.collection(SITE.collections.meta).doc("settings").get();
+  const round = Number(snapshot.data()?.voteRound ?? 1);
+  return Number.isFinite(round) && round > 0 ? round : 1;
+}
+
+export async function clearAllVotes() {
+  await deleteCollection(SITE.collections.votes);
+  await deleteCollection(SITE.collections.names);
+
+  const db = getAdminDb();
+  const settingsRef = db.collection(SITE.collections.meta).doc("settings");
+  const snapshot = await settingsRef.get();
+  const nextRound = Number(snapshot.data()?.voteRound ?? 1) + 1;
+
+  await settingsRef.set(
+    {
+      voteRound: nextRound,
+      clearedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  return nextRound;
+}
+
 function toIso(value: unknown) {
   if (value && typeof value === "object" && "toDate" in value) {
     return (value as { toDate: () => Date }).toDate().toISOString();

@@ -23,7 +23,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
-  title: "अपूर्वाच्या डोहाळे जेवण | Apoorva Baby Shower",
+  title: "अपूर्वाच्या डोहाळे जेवण | Apurwa Baby Shower",
   description:
     "अपूर्वा आणि विवेक यांच्या डोहाळे जेवण सोहळ्याचे स्नेहपूर्वक निमंत्रण. गुरुवार, २९ ऑक्टोबर २०२६.",
   applicationName: "apurwa-babyshower",

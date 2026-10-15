@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import { useLanguage } from "@/context/LanguageContext";
+import { SITE } from "@/lib/site";
 import type { Prediction } from "@/lib/types";
 
 function burstConfetti() {
@@ -31,6 +32,12 @@ function burstConfetti() {
   }, 180);
 }
 
+function storedRound() {
+  const value = window.localStorage.getItem(SITE.voteStorageKey);
+  const round = Number(value);
+  return Number.isFinite(round) && round > 0 ? round : null;
+}
+
 export function PredictionForm() {
   const { t } = useLanguage();
   const [prediction, setPrediction] = useState<Prediction | "">("");
@@ -40,9 +47,29 @@ export function PredictionForm() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [alreadyVoted, setAlreadyVoted] = useState(false);
+
+  useEffect(() => {
+    const saved = storedRound();
+    fetch("/api/vote-round", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((json) => {
+        const round = Number(json.round ?? 1);
+        if (saved && saved === round) {
+          setAlreadyVoted(true);
+        } else if (saved && saved !== round) {
+          window.localStorage.removeItem(SITE.voteStorageKey);
+          setAlreadyVoted(false);
+        }
+      })
+      .catch(() => {
+        if (saved) setAlreadyVoted(true);
+      });
+  }, []);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (alreadyVoted) return;
     if (!prediction) {
       setError(t.errorPrediction);
       return;
@@ -76,6 +103,9 @@ export function PredictionForm() {
         return;
       }
 
+      const json = await response.json().catch(() => ({ round: 1 }));
+      window.localStorage.setItem(SITE.voteStorageKey, String(json.round ?? 1));
+      setAlreadyVoted(true);
       setSuccess(true);
       burstConfetti();
     } catch {
@@ -91,77 +121,84 @@ export function PredictionForm() {
         {t.predictHeading}
       </h2>
       <p className="mx-auto mt-4 max-w-xl text-center leading-relaxed text-ink-soft">
-        {t.predictInstruction}
+        {alreadyVoted ? t.alreadyVotedBody : t.predictInstruction}
       </p>
 
-      <form onSubmit={onSubmit} className="glass-card mx-auto mt-8 max-w-xl rounded-[32px] p-5 sm:p-8">
-        <div className="grid gap-3">
-          <button
-            type="button"
-            data-active={prediction === "boy"}
-            onClick={() => setPrediction("boy")}
-            className="choice-card px-4 py-5 text-left text-lg"
-          >
-            {t.boyOption}
-          </button>
-          <button
-            type="button"
-            data-active={prediction === "girl"}
-            onClick={() => setPrediction("girl")}
-            className="choice-card px-4 py-5 text-left text-lg"
-          >
-            {t.girlOption}
-          </button>
+      {alreadyVoted ? (
+        <div className="glass-card mx-auto mt-8 max-w-xl rounded-[32px] p-8 text-center">
+          <p className="font-display text-3xl text-ink">{t.alreadyVotedTitle}</p>
+          <p className="mt-4 leading-relaxed text-ink-soft">{t.thanksBody1}</p>
         </div>
+      ) : (
+        <form onSubmit={onSubmit} className="glass-card mx-auto mt-8 max-w-xl rounded-[32px] p-5 sm:p-8">
+          <div className="grid gap-3">
+            <button
+              type="button"
+              data-active={prediction === "boy"}
+              onClick={() => setPrediction("boy")}
+              className="choice-card px-4 py-5 text-left text-lg"
+            >
+              {t.boyOption}
+            </button>
+            <button
+              type="button"
+              data-active={prediction === "girl"}
+              onClick={() => setPrediction("girl")}
+              className="choice-card px-4 py-5 text-left text-lg"
+            >
+              {t.girlOption}
+            </button>
+          </div>
 
-        {prediction ? (
-          <label className="mt-6 block">
-            <span className="mb-2 block text-sm text-ink">
-              {prediction === "boy" ? t.boyNameLabel : t.girlNameLabel}
-            </span>
+          {prediction ? (
+            <label className="mt-6 block">
+              <span className="mb-2 block text-sm text-ink">
+                {prediction === "boy" ? t.boyNameLabel : t.girlNameLabel}
+              </span>
+              <input
+                required
+                value={babyName}
+                onChange={(event) => setBabyName(event.target.value)}
+                placeholder={
+                  prediction === "boy" ? t.boyNamePlaceholder : t.girlNamePlaceholder
+                }
+                className="field"
+              />
+            </label>
+          ) : null}
+
+          <label className="mt-5 block">
+            <span className="mb-2 block text-sm text-ink">{t.guestLabel}</span>
             <input
               required
-              value={babyName}
-              onChange={(event) => setBabyName(event.target.value)}
-              placeholder={
-                prediction === "boy" ? t.boyNamePlaceholder : t.girlNamePlaceholder
-              }
+              value={guestName}
+              onChange={(event) => setGuestName(event.target.value)}
+              placeholder={t.guestPlaceholder}
               className="field"
             />
           </label>
-        ) : null}
 
-        <label className="mt-5 block">
-          <span className="mb-2 block text-sm text-ink">{t.guestLabel}</span>
-          <input
-            required
-            value={guestName}
-            onChange={(event) => setGuestName(event.target.value)}
-            placeholder={t.guestPlaceholder}
-            className="field"
-          />
-        </label>
+          <label className="mt-5 block">
+            <span className="mb-2 block text-sm text-ink">
+              {t.blessingLabel}{" "}
+              <em className="not-italic text-ink-soft">({t.blessingOptional})</em>
+            </span>
+            <textarea
+              rows={4}
+              value={blessing}
+              onChange={(event) => setBlessing(event.target.value)}
+              placeholder={t.blessingPlaceholder}
+              className="field resize-none"
+            />
+          </label>
 
-        <label className="mt-5 block">
-          <span className="mb-2 block text-sm text-ink">
-            {t.blessingLabel}{" "}
-            <em className="not-italic text-ink-soft">({t.blessingOptional})</em>
-          </span>
-          <textarea
-            rows={4}
-            value={blessing}
-            onChange={(event) => setBlessing(event.target.value)}
-            placeholder={t.blessingPlaceholder}
-            className="field resize-none"
-          />
-        </label>
+          {error ? <p className="mt-4 text-sm text-blush-deep">{error}</p> : null}
 
-        {error ? <p className="mt-4 text-sm text-blush-deep">{error}</p> : null}
-
-        <button type="submit" disabled={submitting} className="premium-button mt-6 w-full">
-          {submitting ? t.submitting : t.submit}
-        </button>
-      </form>
+          <button type="submit" disabled={submitting} className="premium-button mt-6 w-full">
+            {submitting ? t.submitting : t.submit}
+          </button>
+        </form>
+      )}
 
       {success ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#fff8ef]/92 px-5 backdrop-blur-md">
