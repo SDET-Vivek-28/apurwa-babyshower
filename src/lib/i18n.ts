@@ -200,4 +200,4 @@ export const copy = {
   },
 } as const;
 
-export type Copy = (typeof copy)["mr"];
+export type Copy = { [K in keyof (typeof copy)["mr"]]: string };

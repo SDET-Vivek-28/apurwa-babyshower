@@ -39,7 +39,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = next;
   };
 
-  const value = useMemo(
+  const value = useMemo<LanguageContextValue>(
     () => ({
       lang,
       setLang,
